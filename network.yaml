@@ -78,6 +78,24 @@
           
 
     # Create IGW
+    # https://docs.ansible.com/ansible/latest/collections/amazon/aws/ec2_vpc_igw_module.html 
+    - name: New Internet Gateway
+      block:
+        - name: Create an Internet Gateway for {{ vpc_id }}
+          amazon.aws.ec2_vpc_igw:
+            vpc_id: "{{ vpc_id }}"
+            tags:
+              Name: infra_services_igw
+          register: infra_igw
+
+        - name: Record the Internet Gateway ID
+          set_fact:
+            subnet_id: "{{ infra_igw.gateway_id }}"
+
+        - name: Report the Internet Gateway Results
+          debug:
+            msg: "{{ infra_igw }}"
+    
 
     # Create Route Table and routes
     
