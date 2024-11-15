@@ -1,0 +1,86 @@
+---
+#
+# This playbook establishes a network with public IP addresses and an internet gateway
+# This allows direct access to the instances from the internet.
+#
+# A VPC contains a collection of subnets and the components that connect them to each other
+# and to other networks including The Internet(tm).
+#
+# A Subnet is a network space, bounded by a CIDR network address. Devices holding addresses
+# within this space can all communicate directly. The physical analog is a broadcast domain
+#
+# An Internet Gateway (IGW) is a connector that bridges a VPC to the internet
+# It has an IP address within the VPC.  Traffic destined for the internet must be
+# routed to the IGW IP address.
+#
+# A route table is what it sounds like: A list of IP route entries that define how
+# traffic destined for addresses outside the current CIDR space should be forwarded.
+#
+# A Security Group defines a set of IP (TCP/UDP) ports that are allowed inbound and outbound
+# from an instance. A security group is applied to an instance and acts as a form of external
+# firewall for the instance.
+#
+# Each object as it is created is identified by a unique ID string. The AWS Ansible modules
+# return a data structure that represents the object and incudes the object ID.
+# The ID can be recorded and used for later operations
+#
+- name: 
+  hosts:
+    - localhost
+
+  gather_facts: no
+  connection: local
+
+  tasks:
+    - name: Report Python Requirements
+      python_requirements_info:
+        dependencies:
+          - boto3
+          - botocore
+    
+    # Create VPC
+    # https://docs.ansible.com/ansible/latest/collections/amazon/aws/ec2_vpc_net_module.html
+    - name: New VPC
+      block:
+        - name: Create a VPC for the new network
+          amazon.aws.ec2_vpc_net:
+            name: infra_services_vpc
+            cidr_block: 172.30.0.0/16 # Allocate a large space
+          register: infra_vpc
+
+        - name: Record the VPC ID
+          set_fact:
+            vpc_id: "{{ infra_vpc.vpc.id }}"
+
+        - name: Report the VPC Object Results
+          debug:
+            msg: "{{ infra_vpc }}"
+
+    # Create Subnet
+    # https://docs.ansible.com/ansible/latest/collections/amazon/aws/ec2_vpc_subnet_module.html
+    - name: New Subnet
+      block:
+        - name: Create a Subnet on VPC "{{ vpc_id }}"
+          amazon.aws.ec2_vpc_subnet:
+            vpc_id: "{{ vpc_id }}"
+            cidr: 172.30.0.0/24 # Use just the first block
+            tags:
+              Name: infra_services_subnet
+          register: infra_subnet
+
+        - name: Record the Subnet ID
+          set_fact:
+            subnet_id: "{{ infra_subnet.subnet.id }}"
+
+        - name: Report the Subnet Object Results
+          debug:
+            msg: "{{ infra_subnet }}"
+          
+
+    # Create IGW
+
+    # Create Route Table and routes
+    
+    # Create Security Group
+
+    # Launch Instance
