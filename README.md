@@ -25,6 +25,40 @@ modules for general communication with the Amazon AWS API
 * [boto3](https://github.com/boto/boto3) - AWS API bindings in Python 3
 * [botocore](https://github.com/boto/botocore) - low level core functionality of boto3 and AWS CLI
 
+## Connection and Authentication
+
+Ansible for AWS depends on the *aws cli* for authentication and, if you don't specify in the
+Ansible parameters, the account and region for your objects.
+
+The easiest way to control the account, auth and region is to log in with `aws sso login` and let
+your AWS account auth method do it's job. Setting up AWS SSO
+authentication and *AWS CLI* are out of scope and a little web
+searching should find you what you need. 
+
+
+The AWS SSO login process does like to use your browser to help you
+enter an out-of-band code to confirm.  If you're running from a
+machine without a browser handy, you can tell that to the auth command
+and cut-n-paste the URL and code to your local browser to confirm.
+
+    aws sso login --no-browser
+	Browser will not be automatically opened.
+	Please visit the following URL:
+
+	https://device.sso.us-east-2.amazonaws.com/
+
+	Then enter the code:
+
+	XXXX-XXXX
+
+	Alternatively, you may visit the following URL which will autofill the code upon loading:
+	https://device.sso.us-east-2.amazonaws.com/?user_code=XXXX-XXXX
+
+The authentication will use your default profile (or one you select
+with a parameter) Then Boto and Ansible will use the cached
+credentials until the session expires and you have to do it again.
+
+## 
 
 # Footnotes
 
