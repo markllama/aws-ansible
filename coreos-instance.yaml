@@ -72,15 +72,14 @@
               amazon.aws.ec2_instance_info:
                 filters:
                   instance-state-name: running
-                  'tag:coreos': true
+                  'tag:Name': "coreos-poc"
               register: instances
 
             - name: Get the image_id(s) of any running instances
               set_fact:
-                running_image_ids: "{{ instances.instances }}"
-              when: (instances.instances | length) > 0
+                image_id: "{{ instances.instances[0].instance_id }}"
+              when: (instances.instances | length) == 1
               
-
         #
         #
         #
@@ -101,9 +100,11 @@
               set_fact:
                 image_id: "{{ (images.images | sort(attribute='name', reverse=true))[0].image_id }}"
 
-            - name: Report the current image id
-              debug:
-                msg: "{{ image_id }}"
+          when: image_id is not defined
+
+        - name: Report the selected image id
+          debug:
+            msg: "{{ image_id }}"
 
 # Find any existing instances
 #   Get the image ID
