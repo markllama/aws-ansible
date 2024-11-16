@@ -66,6 +66,45 @@
           debug:
             msg: "{{ infra_sg }}"
 
+        - name: Get Instance Info
+          block: 
+            - name: Get info on any existing instances
+              amazon.aws.ec2_instance_info:
+                filters:
+                  instance-state-name: running
+                  'tag:coreos': true
+              register: instances
+
+            - name: Get the image_id(s) of any running instances
+              set_fact:
+                running_image_ids: "{{ instances.instances }}"
+              when: (instances.instances | length) > 0
+              
+
+        #
+        #
+        #
+        - name: Get the ID of the most recent CoreOS Image
+          block:
+            - name: Query the CoreOS image list
+              amazon.aws.ec2_ami_info:
+                owners:
+                  - 125523088429
+                filters:
+                  architecture: x86_64
+                  name: "fedora-coreos-*-x86_64"
+                  description: "Fedora CoreOS stable * x86_64"
+                  image-type: machine
+              register: images
+
+            - name: Sort and Pick the most recent image
+              set_fact:
+                image_id: "{{ (images.images | sort(attribute='name', reverse=true))[0].image_id }}"
+
+            - name: Report the current image id
+              debug:
+                msg: "{{ image_id }}"
+
 # Find any existing instances
 #   Get the image ID
 
