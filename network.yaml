@@ -97,26 +97,58 @@
             msg: "{{ infra_igw }}"
     
 
+    # Get the default route created for the VPC
+    # https://docs.ansible.com/ansible/latest/collections/amazon/aws/ec2_vpc_route_table_info_module.html
+    - name:
+      block:
+        - name: Get the default route table for the new VPC
+          amazon.aws.ec2_vpc_route_table_info:
+            filters:
+              "vpc-id": "{{ vpc_id }}"
+          register: infra_route_tables
+        
+    
     # Create Route Table and routes
     # https://docs.ansible.com/ansible/latest/collections/amazon/aws/ec2_vpc_route_table_module.html
-    - name: New Route Table
-      block:
-        - name: Create a Route Table to the IGW {{ gateway_id }}
+    # - name: New Route Table
+    #   block:
+    #     - name: Create a Route Table to the IGW {{ gateway_id }}
+    #       amazon.aws.ec2_vpc_route_table:
+    #         vpc_id: "{{ vpc_id }}"
+    #         subnets:
+    #           - "{{ subnet_id }}"
+    #         routes:
+    #           - dest: 0.0.0.0/0
+    #             gateway_id: "{{ gateway_id }}"
+    #         tags:
+    #           Name: infra_services_route_rt
+    #       register: infra_route_table
+
+        - name: Record the Route Table ID
+          set_fact:
+            route_table_id: "{{ infra_route_tables.route_tables[0].id }}"
+
+        - name: Report the Route Table  Results
+          debug:
+            msg: "{{ infra_route_tables.route_tables[0] }}"
+
+        - name: Add default route to the IGW
           amazon.aws.ec2_vpc_route_table:
+            lookup: id
             vpc_id: "{{ vpc_id }}"
+            route_table_id: "{{ route_table_id }}"
+            purge_subnets: false
             subnets:
               - "{{ subnet_id }}"
+            purge_routes: false
             routes:
               - dest: 0.0.0.0/0
                 gateway_id: "{{ gateway_id }}"
             tags:
               Name: infra_services_route_rt
           register: infra_route_table
-
-        - name: Record the Route Table ID
-          set_fact:
-            route_table_id: "{{ infra_route_table.route_table.route_table_id }}"
-    
-        - name: Report the Route Table  Results
+      
+        - name: Report the Route Table Results
           debug:
-            msg: "{{ infra_route_table }}"
+            msg: "{{ infra_route_table.route_table }}"
+
