@@ -1,0 +1,11 @@
+[Unit]
+Description=Install Overlay Packages
+After=systemd-resolved.service
+Before=zincati.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/overlay-packages
+
+[Install]
+WantedBy=multi-user.target

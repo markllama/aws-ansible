@@ -11,6 +11,9 @@
   gather_facts: no
   connection: local
 
+  vars:
+    user_data: "{{ lookup('file', 'files/coreos-poc.ign', convert_data=false) | string }}"
+    
   tasks:
 
     - name: Get Subnet ID
@@ -81,13 +84,13 @@
           amazon.aws.ec2_instance:
             name: "coreos-poc"
             image_id: "{{ image_id }}"
-            instance_type: t2.large
+            instance_type: t2.medium
             vpc_subnet_id: "{{ subnet_id }}"
             security_group: "{{ sg_id }}"
             network:
               assign_public_ip: true
             key_name: ansible_user
-
+            user_data: "{{ user_data }}"
           register: instance
 
         - name: Save the instance ID for later
@@ -97,4 +100,9 @@
         - name: Report the Instance Data
           debug:
             msg: "{{ instance.instances[0] }}"
+
+
+        - name: Report the Instance Public DNS Name
+          debug:
+            msg: "Public DNS Hostname: {{ instance.instances[0].public_dns_name }}"
             
