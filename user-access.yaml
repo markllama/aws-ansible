@@ -74,3 +74,15 @@
         - name: Report SSH Security Group
           debug:
             msg: "{{ infra_sg }}"
+
+    - name: Create IAM Role for SSM Agent SSH
+      amazon.aws.iam_role:
+        name: ssm-ssh-role
+        description: "Allow SSM Agent to open SSH sessions on instances"
+        state: present
+        assume_role_policy_document: "{{ lookup('file', 'files/ssm-assume-role-policy.json') }}"
+        managed_policies:
+          - arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore
+      register: iam_role_ssm
+
+      # iam_iam_instance-profile

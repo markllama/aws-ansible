@@ -80,6 +80,35 @@
           debug:
             msg: "{{ image_id }}"
 
+        - name: Get the SSM Manager Policy to allow SSH
+          block:
+            - name: Get SSM Manager Policy
+              amazon.aws.iam_role_info:
+                name: "ssm-ssh-role"
+              register: iam_roles
+
+            - name: Record the IAM id for the SSH role
+              set_fact:
+                iam_role: "{{ iam_roles.iam_roles[0] }}"
+
+            - name: Report the IAM role
+              debug:
+                msg: "{{ iam_role }}"
+                
+            - name: Get the IAM Instance Profile for SSM SSH login
+              amazon.aws.iam_instance_profile_info:
+                name: "ssm-ssh-role"
+              register: iam_instance_profiles
+
+            - name: Record ARN for SSM SSH Instance Profile
+              set_fact:
+                iam_instance_profile: "{{ iam_instance_profiles.iam_instance_profiles[0] }}"
+
+            - name: Report the IAM instance_profile
+              debug:
+                msg: "{{ iam_instance_profile }}"
+                
+            
         - name: Create a Core OS Instance
           amazon.aws.ec2_instance:
             name: "coreos-poc"
@@ -90,6 +119,7 @@
             network:
               assign_public_ip: true
             key_name: ansible_user
+            iam_instance_profile: "{{ iam_instance_profile.arn }}"
             user_data: "{{ user_data }}"
           register: instance
 
